@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <!-- Main page (update base URL to yours) -->
+    <url>
+        <loc>https://suahco42025.github.io/grade_calculator/</loc>  <!-- Or your custom domain, e.g., https://gradecalculator.co/ -->
+        <lastmod>2025-10-07</lastmod>  <!-- Update to today's date -->
+        <changefreq>weekly</changefreq>  <!-- Or 'monthly' for low updates -->
+        <priority>1.0</priority>
+    </url>
+    
+    <!-- Key sections (even if client-side, list for better crawling) -->
+    <url>
+        <loc>https://suahco42025.github.io/grade_calculator/#grades</loc>  <!-- Anchor for sections -->
+        <lastmod>2025-10-07</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://suahco42025.github.io/grade_calculator/#help</loc>
+        <lastmod>2025-10-07</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://suahco42025.github.io/grade_calculator/#settings</loc>
+        <lastmod>2025-10-07</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://suahco42025.github.io/grade_calculator/#profile</loc>
+        <lastmod>2025-10-07</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://suahco42025.github.io/grade_calculator/#contact</loc>
+        <lastmod>2025-10-07</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://suahco42025.github.io/grade_calculator/#privacy</loc>
+        <lastmod>2025-10-07</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://suahco42025.github.io/grade_calculator/#terms</loc>
+        <lastmod>2025-10-07</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.5</priority>
+    </url>
+</urlset>

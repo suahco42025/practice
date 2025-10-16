@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://suahco42025.github.io/grade_calculator/mysite.xml

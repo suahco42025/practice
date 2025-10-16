@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Calculator | Free Online GPA & Average Tool with PDF/CSV Export</title>
+    <meta name="description" content="Track grades across periods & exams with our free Grade Matrix Calculator. Calculate averages, export to PDF/CSV, save sessions. Ideal for students & teachers—mobile-friendly & secure.">
+    <meta name="keywords" content="grade calculator, GPA tool, average calculator, student grades, exam tracker, PDF export, online grading">
+    <meta name="author" content="Grade Calculator Team">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000"> <!-- 1-year caching fallback for images/assets -->
+    <link rel="canonical" href="https://gradecalculator.vercel.app/Grade-Calculator/"> <!-- Updated to Vercel example; change to your domain -->
+
+    <!-- Preload critical images for better caching/performance -->
+    <link rel="preload" href="favicon.ico" as="image">
+    <link rel="preload" href="favicon.svg" as="image">
+    <link rel="preload" href="favicon-96x96.png" as="image">
+    <link rel="preload" href="apple-touch-icon.png" as="image">
+    <link rel="preload" href="Suahco4.png" as="image"> <!-- Profile pic -->
+
+    <!-- FIXED: Favicons - Cleaned up paths, removed ?, added strong fallback -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Chrome fallback -->
+    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+
+    <!-- Open Graph for Social Sharing -->
+    <meta property="og:title" content="Grade Calculator | Free Online GPA & Average Tool">
+    <meta property="og:description" content="Calculate grades, track progress, and export reports. Join thousands of students using our free tool.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gradecalculator.vercel.app/Grade-Calculator/"> <!-- Updated to Vercel example -->
+    <meta property="og:image" content="https://gradecalculator.vercel.app/og-image.jpg"> <!-- Add a 1200x630 promo image; update path -->
+    <meta property="og:site_name" content="Grade Calculator">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Grade Calculator | Free GPA Tool">
+    <meta name="twitter:description" content="Track grades, calculate averages, export to PDF. Free and easy!">
+    <meta name="twitter:image" content="https://gradecalculator.vercel.app/twitter-image.jpg"> <!-- 1200x675 image; update path -->
+
+    <!-- Structured Data (JSON-LD for Educational App) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "Grade Calculator",
+        "url": "https://gradecalculator.vercel.app/Grade-Calculator/",
+        "description": "Free online tool for calculating student grades, GPAs, and generating reports.",
+        "applicationCategory": "EducationApplication",
+        "operatingSystem": "Web",
+        "featureList": ["Grade Tracking", "Average Calculation", "PDF Export", "Mobile Responsive"],
+        "author": {
+            "@type": "Person",
+            "name": "Grade Calculator Team"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "mr.suah19@gmail.com",
+            "contactType": "Customer Support"
+        }
+    }
+    </script>
+
+    <!-- Google Verification -->
+    <meta name="google-site-verification" content="qUjhpW1KYde7nCoqxXWlRgPTK_cqp92DLaia1XKVBp0" />
+
+    <!-- Noscript Fallback -->
+    <noscript>
+        <style>body { padding: 20px; } .container { display: block !important; }</style>
+        <div style="text-align: center; padding: 50px; background: #f4f7fa;">
+            <h1>Grade Calculator</h1>
+            <p>Enable JavaScript to use the full interactive tool. Track grades, calculate averages, and export reports.</p>
+            <a href="mailto:mr.suah19@gmail.com">Contact Us</a>
+        </div>
+    </noscript>
+
+    <!-- jsPDF + autoTable for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Chart.js for visualizations (using a specific version to resolve source map warnings) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <!-- EmailJS for contact form -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <!-- NEW: QR Code Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script> <!-- For generating QRs -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script> <!-- For scanning QRs -->
+    <!-- NEW: Tesseract.js for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+
+    <!-- Load Firebase config from generated file -->
+    <script src="firebase-config.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+        // FIXED: Add config check + error logging
+        if (typeof firebaseConfig === 'undefined') {
+            console.error('❌ Firebase config missing! Check firebase-config.js and env vars.');
+            alert('App setup error: Firebase config not loaded. Contact support or refresh.');
+        } else {
+            console.log('✅ Firebase config loaded:', firebaseConfig.projectId);  // Debug log
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+
+            // Make auth global for other scripts
+            window.auth = auth;
+            window.onAuthStateChanged = onAuthStateChanged;
+            window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+            window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+            window.signOut = signOut;
+            window.updateProfile = updateProfile;
+        }
+    </script>
+    <!-- Link to external stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- NEW: Mandatory Login Section (visible by default) -->
+    <section id="login-section" class="login-section">
+        <div class="auth-card">
+            <h2 id="authTitle">Create an Account</h2>
+            <p id="authSubtitle">to save sessions and track your progress.</p>
+            <form class="auth-form" id="authForm">
+                <div class="form-group" id="nameInputGroup">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="e.g., Alex Doe">
+                </div>
+                <div class="form-group">
+                    <label for="authEmail">Email Address</label>
+                    <input type="email" id="authEmail" placeholder="your.email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" required>
+                </div>
+                <button type="submit" id="authSubmit" class="submit-btn">Create Account</button>
+            </form>
+            <div class="auth-toggle">
+                <p>Already have an account? <button type="button" id="toggleAuth" class="auth-toggle-btn">Log In</button></p>
+            </div>
+            <div id="authError" class="auth-error"></div>
+        </div>
+    </section>
+
+    <!-- NEW: Main App Wrapper (hidden by default) -->
+    <div id="main-app" style="display: none;">
+        <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="#" onclick="showSection('grades')">Grade Calculator</a>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#" onclick="showSection('grades')">Grades</a></li>
+                <li><a href="#" onclick="showSection('profile')">Profile</a></li>
+                <li><a href="#" onclick="showSection('settings')">Settings</a></li>
+                <li><a href="#" onclick="showSection('help')">Help</a></li>
+                <li><a href="#" onclick="showSection('ocr')">OCR Scan</a></li>
+                <li><a href="#" onclick="showSection('contact')">Contact</a></li>
+            </ul>
+            <div class="nav-profile">
+                <img id="navProfilePic" src="Suahco4.png" alt="User profile avatar" class="profile-pic" onclick="toggleProfileMenu()">
+                <!-- Profile dropdown - INITIALIZED TO GUEST STATE -->
+                <div id="profileDropdown" class="profile-dropdown">
+                    <a href="#" onclick="showSection('profile')">Login</a>
+                </div>
+            </div>
+            <div class="hamburger" onclick="toggleNav()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        </nav>
+
+        <!-- UPDATED: Floating Chat Toggle Button - NOW WITH ONLY suahco4.png (no background) -->
+    <button class="floating-chat-toggle" onclick="toggleFloatingChat()" title="Chat with Suahco Assistant">
+        <img src="Suahco4.png" alt="Suahco Assistant">
+    </button>
+
+    <!-- Floating Chat Window -->
+    <div id="floatingChatWindow" class="floating-chat-window">
+        <div class="floating-chat-header">
+            <h4>Suahco Assistant</h4>
+            <button class="floating-chat-close" onclick="toggleFloatingChat()">&times;</button>
+        </div>
+        <div id="floatingChatMessages" class="floating-chat-messages">
+            <div class="ai-message ai">Hi! I'm your assistant. Ask me about your grades, study advice, or tool tips. For example: "How do I improve my Math score?"</div>
+        </div>
+        <div class="floating-chat-input">
+            <input type="text" id="floatingChatInput" placeholder="Type your question..." onkeypress="handleFloatingKeyPress(event)">
+            <button onclick="sendMessageToFloatingAI()">Send</button>
+        </div>
+        <div id="floatingChatStatus" class="floating-chat-status"></div>
+        <div class="floating-chat-full-link">
+            <a href="#" onclick="showSection('ai'); toggleFloatingChat();">Open Full Chat →</a>
+        </div>
+    </div>
+
+    <!-- NEW: Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- NEW: QR Scan Modal -->
+    <div id="qrModal" class="qr-modal">
+        <div class="qr-modal-content">
+            <span class="qr-close" onclick="closeQRModal()">&times;</span>
+            <h3>📱 Scan QR to Load Session</h3>
+            <p>Point your camera at the QR code.</p>
+            <video id="qrVideo" autoplay playsinline></video>
+            <div id="qrStatus" class="qr-status">Loading camera...</div>
+            <button onclick="closeQRModal()" class="small-btn">Cancel</button>
+        </div>
+    </div>
+
+    <!-- NEW: OCR Camera Modal -->
+    <div id="ocrCameraModal" class="qr-modal">
+        <div class="qr-modal-content">
+            <span class="qr-close" onclick="closeOcrCameraModal()">&times;</span>
+            <h3>📷 Capture Grade Sheet</h3>
+            <p>Position the document in the frame and hold steady.</p>
+            <video id="ocrCameraVideo" autoplay playsinline></video>
+            <div id="ocrCameraStatus" class="qr-status">Loading camera...</div>
+            <button onclick="captureOcrImage()" class="small-btn">Capture Image</button>
+            <button onclick="closeOcrCameraModal()" class="small-btn secondary-btn">Cancel</button>
+        </div>
+    </div>
+
+    <!-- NEW: Hidden file input for OCR -->
+        <div class="container">
+            <!-- Wrapped: Grades Section -->
+        <section id="grades-section" class="grades-section active">
+            <div class="grades-header">
+                <h1>Grade Matrix</h1>
+                <div class="controls">
+                    <button id="addSubject" title="Add a new subject row">➕ Add Subject</button>
+                    <button id="scanGradesBtn" onclick="showSection('ocr')" title="Scan grades from an image">📷 Scan Grades</button>
+                    <div class="download-buttons">
+                        <button id="downloadBtn" style="display: none;" onclick="downloadCSV()" title="Export as CSV file">📄 CSV</button>
+                        <button id="pdfBtn" style.display="none;" onclick="downloadPDF()" title="Export as PDF file">📄 PDF</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Grade Table-->
+            <div id="grade-table-card" class="grade-table-card">
+            <div class="table-wrapper">
+                <table id="gradeTable">
+    <thead>
+        <tr>
+            <th class="subject-th">Subject</th>
+            <th class="sem1-th" data-tooltip="1st Semester">1st Period</th>
+            <th class="sem1-th" data-tooltip="1st Semester">2nd Period</th>
+            <th class="sem1-th" data-tooltip="1st Semester">3rd Period</th>
+            <th class="sem1-th" data-tooltip="1st Semester">1st Exam</th>
+            <th class="sem-avg-th" data-tooltip="1st Semester Average">1st Sem Avg</th>
+            <th class="sem2-th" data-tooltip="2nd Semester">4th Period</th>
+            <th class="sem2-th" data-tooltip="2nd Semester">5th Period</th>
+            <th class="sem2-th" data-tooltip="2nd Semester">6th Period</th>
+            <th class="sem2-th" data-tooltip="2nd Semester">Final Exam</th>
+            <th class="sem-avg-th" data-tooltip="2nd Semester Average">2nd Sem Avg</th>
+            <th class="final-avg" data-tooltip="Overall Final Average">Final Avg</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Dynamic rows will be added here -->
+    </tbody>
+    <tfoot>
+        <tr class="period-avg-row">
+            <td><strong>Period Averages</strong></td>
+            <td id="avg1">0.00</td>
+            <td id="avg2">0.00</td>
+            <td id="avg3">0.00</td>
+            <td id="avgExam1">0.00</td>
+            <td></td> <!-- Placeholder for 1st Sem Avg column -->
+            <td id="avg4">0.00</td>
+            <td id="avg5">0.00</td>
+            <td id="avg6">0.00</td>
+            <td id="avgExam2">0.00</td>
+            <td colspan="2"></td> <!-- Span across semester/final columns -->
+        </tr>
+        <tr class="period-avg-row">
+            <td><strong>Semester Averages</strong></td>
+            <td colspan="4"></td> <!-- Span across period columns -->
+            <td class="sem1-avg" id="sem1OverallAvg">0.00</td>
+            <td colspan="4"></td> <!-- Span across period columns -->
+            <td class="sem2-avg" id="sem2OverallAvg">0.00</td>
+            <td class="final-avg" id="finalOverallAvg">0.00</td>
+        </tr>
+    </tfoot>
+</table>
+            </div>
+            </div>
+            <div class="grades-footer">
+                <div id="error" class="error"></div>
+                <button id="calculate">Calculate Averages</button>
+                <div id="result"></div>
+            </div>
+        </section>
+
+        <!-- Assistant Section (now hidden by default, accessible via floating chat) -->
+        <section id="ai-section" class="ai-section" style="display: none;">
+            <h1>🤖 Assistant</h1>
+            <div class="ai-content">
+                <p style="text-align: center; color: #666;">Ask me anything about grades, study tips, or how to use this tool! (Powered by OpenAI)</p>
+                <div class="ai-chat-container">
+                    <div id="aiChatMessages" class="ai-chat-messages">
+                        <div class="ai-message ai">Hi! I'm your assistant. Ask me about your grades, study advice, or tool tips. For example: "How do I improve my Math score?"</div>
+                    </div>
+                    <div class="ai-chat-input">
+                        <input type="text" id="aiChatInput" placeholder="Type your question..." onkeypress="handleKeyPress(event)">
+                        <button onclick="sendMessageToAI()">Send</button>
+                    </div>
+                </div>
+                <div id="aiStatus" class="ai-status"></div>
+                <p style="text-align: center; font-size: 12px; color: #999;">Note: Your chats are sent to OpenAI for processing. No data is stored.</p>
+            </div>
+            <button onclick="showSection('grades')" class="back-btn">← Back to Grades</button>
+        </section>
+
+        <!-- NEW: Advanced OCR Section -->
+        <section id="ocr-section" class="ocr-section" style="display: none;">
+            <h1>Advanced OCR - Scan Grades</h1>
+            <canvas id="ocrPreprocessCanvas" style="display: none;"></canvas> <!-- Hidden canvas for image processing -->
+            <div class="ocr-content">
+                <!-- Left Column: Controls -->
+                <div class="ocr-controls">
+                    <div id="ocrDropZone" class="ocr-drop-zone">
+                        <div class="ocr-drop-icon">📷</div>
+                        <p>Drag & Drop an image here</p>
+                        <p class="ocr-drop-separator">or</p>
+                        <button type="button" class="ocr-select-btn" onclick="document.getElementById('ocrFileInput').click()">Select Image</button>
+                        <button type="button" class="ocr-camera-btn" onclick="startOcrCamera()">Take a Picture</button>
+                        <input type="file" id="ocrFileInput" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp" style="display: none;">
+                    </div>
+                    <div class="ocr-instructions">
+                        <h3>How to Get the Best Results:</h3>
+                        <ul>
+                            <li>Use a clear, well-lit image of your grade sheet.</li>
+                            <li>Ensure the text is horizontal and not skewed.</li>
+                            <li>Crop the image to include only the grades table.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Right Column: Results -->
+                <div class="ocr-results">
+                    <div id="ocrPreviewContainer" class="ocr-preview-container" style="display: none;">
+                        <img id="ocrPreviewImage" src="#" alt="Image preview">
+                    </div>
+                    <div id="ocrProgress" class="ocr-progress" style="display: none;">
+                        <div id="ocrProgressBar" class="ocr-progress-bar"></div>
+                        <span id="ocrProgressText"></span>
+                    </div>
+                    <textarea id="ocrResultText" placeholder="Recognized text will appear here..."></textarea>
+                    <button id="parseOcrBtn" class="small-btn" onclick="parseAndAddOcrGrades()">Parse & Add to Table</button>
+                </div>
+            </div>
+            <button onclick="showSection('grades')" class="back-btn">← Back to Grades</button>
+        </section>
+
+        <!-- Help Section (hidden by default) -->
+        <section id="help-section" class="help-section" style="display: none;">
+            <div class="help-header">
+                <h1>Help & Guide</h1>
+                <p>Find answers to common questions and learn how to use the tool effectively.</p>
+            </div>
+            
+            <div class="help-content">
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)"><span>📖</span> Introduction <span class="accordion-icon"></span></h2>
+                    <div class="accordion-content">
+                        <p>Welcome to <strong>Grade Matrix Calculator</strong>! This tool helps you track grades across periods and exams, calculate subject/period averages, and export reports. It's designed for students and teachers—simple, fast, and mobile-friendly.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)"><span>🚀</span> How to Use <span class="accordion-icon"></span></h2>
+                    <div class="accordion-content">
+                        <ol>
+                            <li><strong>Add Subjects</strong>: Click "Add Subject" or use the pre-loaded ones (e.g., Mathematics). Edit names as needed.</li>
+                            <li><strong>Enter Scores</strong>: Fill in numbers (0-100) for each period/exam. Scores below 70 auto-highlight in red!</li>
+                            <li><strong>Calculate</strong>: Click "Calculate Averages" (<em>Pro Tip: Ctrl+Enter shortcut!</em>) to compute subject averages, period averages, and overall grade.</li>
+                            <li><strong>Download</strong>: After calculating, use "Download CSV" (for Excel) or "Download PDF" (for printing). Files include only periods with data.</li>
+                            <li><strong>Remove Rows</strong>: Click the "Remove" button next to any subject.</li>
+                        </ol>
+                        <p><em>Tip:</em> Empty scores are skipped in averages. Your data is saved in your browser automatically.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)"><span>✨</span> Features <span class="accordion-icon"></span></h2>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Real-Time Highlights</strong>: Low scores (&lt;70) turn red instantly.</li>
+                            <li><strong>Dynamic Table</strong>: Add/remove subjects on-the-fly; sticky headers for scrolling.</li>
+                            <li><strong>Comprehensive Averages</strong>: Calculates averages for each subject, period, and semester, plus a final overall average.</li>
+                            <li><strong>Professional Exports</strong>: Download your grade matrix as a clean CSV or a formatted PDF report.</li>
+                            <li><strong>User Accounts</strong>: Sign up to save your grade sessions and access them from anywhere.</li>
+                            <li><strong>Validation</strong>: Errors shown for invalid inputs (e.g., non-numbers).</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)"><span>🔧</span> Troubleshooting <span class="accordion-icon"></span></h2>
+                    <div class="accordion-content">
+                        <dl>
+                            <dt>No averages showing?</dt>
+                            <dd>Enter at least one score per subject and click "Calculate".</dd>
+                            
+                            <dt>Download not working?</dt>
+                            <dd>Ensure you've calculated first. Check browser pop-up blockers.</dd>
+                            
+                            <dt>Mobile issues?</dt>
+                            <dd>Horizontal scroll for wide table; tap hamburger (☰) for nav.</dd>
+                            
+                            <dt>Red highlights not clearing?</dt>
+                            <dd>Edit score to 70+ or clear it—updates live.</dd>
+                        </dl>
+                        <p>If issues persist, refresh the page or check console (F12).</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)"><span>📧</span> Contact & More <span class="accordion-icon"></span></h2>
+                    <div class="accordion-content">
+                        <p>Questions? Use the <a href="#" onclick="showSection('contact')">Contact Form</a> or email <a href="mailto:mr.suah19@gmail.com">mr.suah19@gmail.com</a>.</p>
+                        <p><em>Last updated:</em> October 13, 2025</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="showSection('grades')" class="back-btn">← Back to Grades</button>
+        </section>
+
+        <!-- Settings Section (hidden by default) -->
+        <section id="settings-section" class="settings-section" style="display: none;">
+            <div class="settings-header">
+                <h1>Application Settings</h1>
+                <p>Customize your Grade Calculator experience.</p>
+            </div>
+            
+            <div class="settings-content">
+                <div class="setting-card">
+                    <h3>🌙 Appearance</h3>
+                    <div class="setting-item">
+                        <label for="themeToggle">Dark Mode</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="setting-card">
+                    <h3>⚠️ Low Score Threshold</h3>
+                    <p>Highlight scores below this value. Current: <strong id="currentThreshold">70</strong></p>
+                    <div class="setting-input-group">
+                        <input type="number" id="thresholdInput" value="70" min="0" max="100" onchange="updateThreshold()">
+                        <button onclick="applyThreshold()" class="small-btn">Apply</button>
+                    </div>
+                </div>
+                
+                <div class="setting-card">
+                    <h3>📊 GPA Mode</h3>
+                    <div class="setting-item">
+                        <label for="gpaToggle">Enable GPA (4.0 Scale)</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="gpaToggle" onchange="toggleGPAScale()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="setting-card">
+                    <h3>📚 Default Subjects</h3>
+                    <p>Comma-separated list for new tables.</p>
+                    <div class="setting-input-group">
+                        <input type="text" id="defaultSubjectsInput" value="Mathematics,English,Science,History" placeholder="e.g., Math,English,Physics">
+                        <button onclick="saveDefaultSubjects()" class="small-btn">Save</button>
+                    </div>
+                </div>
+                
+                <div class="setting-card">
+                    <h3>🏫 School Information</h3>
+                    <p>Set a school name for PDF report titles.</p>
+                    <div class="setting-input-group">
+                        <input type="text" id="schoolNameInput" placeholder="e.g., University of Excellence">
+                        <button onclick="saveSchoolName()" class="small-btn">Save</button>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <h3>📤 Export Options</h3>
+                    <div class="setting-item">
+                        <label for="dateInFilename">Include Date in Filenames</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="dateInFilename" checked onchange="toggleDateInExport()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="setting-card danger-zone">
+                    <h3>🗑️ Data Management</h3>
+                    <p>These actions cannot be undone.</p>
+                    <button id="resetSemesters" class="clear-btn warning-btn">Reset All Scores</button>
+                    <button onclick="clearAllData()" class="clear-btn">Clear All Data & Reset Table</button>
+                </div>
+            </div>
+            
+            <button onclick="showSection('grades')" class="back-btn">← Back to Grades</button>
+        </section>
+
+        <!-- Profile Section (hidden by default) -->
+        <section id="profile-section" class="profile-section" style="display: none;">
+            <div class="profile-header">
+                <h1>My Profile</h1>
+                <p>Manage your account, view stats, and access saved sessions.</p>
+            </div>
+            
+            <div class="profile-content">
+                <!-- Auth Section has been moved to the top-level login screen -->
+
+                <!-- Profile Info (shown if logged in) -->
+                <div id="profileInfo" class="profile-info-grid">
+                    <!-- Left Column: User Card -->
+                    <div class="profile-user-card">
+                        <div class="profile-pic-container">
+                            <img id="profilePicPreview" src="Suahco4.png" alt="User profile picture preview" class="profile-pic-preview">
+                            <button class="change-pic-btn" onclick="document.getElementById('profilePicUpload').click()" title="Change profile picture">📷</button>
+                            <input type="file" id="profilePicUpload" accept="image/*" onchange="handlePicUpload(event)" style="display: none;">
+                        </div>
+                        <h2 id="userName"></h2>
+                        <p id="userEmail"></p>
+                        <div class="profile-edit-form">
+                            <input type="text" id="updateNameInput" placeholder="Update display name">
+                            <button onclick="saveProfile()" class="small-btn">Save</button>
+                        </div>
+                        <p class="small-text">Your email is managed by your login provider.</p>
+                    </div>
+                    <!-- Right Column: Detail Cards -->
+                    <div class="profile-details-cards">
+                        <div class="profile-card">
+                            <h3>💾 Saved Sessions</h3>
+                            <p>Save your current grades to load later or generate a QR code for quick scanning.</p>
+                            <div class="session-controls">
+                                <button onclick="saveSession()" class="small-btn">Save & Get QR</button>
+                                <button onclick="generateCurrentSessionQR()" class="small-btn secondary-btn">Generate QR Only</button>
+                                <button onclick="startQRScan()" class="small-btn secondary-btn">📱 Scan to Load</button>
+                            </div>
+                            <ul id="sessionList" class="session-list"></ul>
+                        </div>
+                        <div class="profile-card">
+                            <h3>📊 Quick Stats & Visualizations</h3>
+                            <div id="statsGrid" class="stats-grid"></div>
+                            <div class="charts-wrapper">
+                                <div class="chart-container"><canvas id="subjectBarChart"></canvas></div>
+                                <div class="chart-container"><canvas id="gradePieChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="profile-card danger-zone">
+                            <h3>🚪 Account Actions</h3>
+                            <p>Logging out will clear your current session from the device.</p>
+                            <button onclick="logout()" class="clear-btn">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="showSection('grades')" class="back-btn">← Back to Grades</button>
+        </section>
+
+        <!-- Contact Section (hidden by default) -->
+        <section id="contact-section" class="contact-section" style="display: none;">
+            <h1>Contact Us</h1>
+            <p class="contact-intro">Have a question, feedback, or need support? We'd love to hear from you!</p>
+            
+            <div class="contact-content">
+                <!-- Left Column: Form -->
+                <div class="contact-form-container">
+                    <form class="contact-form" id="contactForm">
+                        <div class="form-group">
+                            <label for="contactName">Name</label>
+                            <input type="text" id="contactName" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactEmail">Email</label>
+                            <input type="email" id="contactEmail" placeholder="your.email@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactSubject">Subject</label>
+                            <input type="text" id="contactSubject" placeholder="e.g., Feedback on OCR" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactMessage">Message</label>
+                            <textarea id="contactMessage" placeholder="Tell us what's on your mind..." required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Send Message</button>
+                    </form>
+                </div>
+                <!-- Right Column: Info -->
+                <div class="contact-info-container">
+                    <div class="contact-info-card">
+                        <h3>Direct Contact</h3>
+                        <p class="contact-info-item">📧 <a href="mailto:mr.suah19@gmail.com">mr.suah19@gmail.com</a></p>
+                        <p class="contact-info-item">📞 <a href="tel:0778662590">+231 (778) 662-590</a></p>
+                        <p class="small-text">We typically respond within 24-48 hours.</p>
+                    </div>
+                    <div class="contact-info-card">
+                        <h3>Looking for something?</h3>
+                        <a href="#" onclick="showSection('help')" class="quick-link-btn">Help & FAQ</a>
+                        <a href="#" onclick="showSection('profile')" class="quick-link-btn">My Profile</a>
+                        <a href="#" onclick="showSection('settings')" class="quick-link-btn">App Settings</a>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="showSection('grades')" class="back-btn">← Back to Grades</button>
+        </section>
+
+        <!-- Privacy Policy Section (hidden by default) -->
+        <section id="privacy-section" class="help-section" style="display: none;">
+            <h1>Privacy Policy</h1>
+            
+            <div class="help-content">
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">📜 Introduction</h2>
+                    <div class="accordion-content active">
+                        <p>Effective Date: October 13, 2025</p>
+                        <p>Welcome to Grade Calculator ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your data when you use our web application (the "App"). By using the App, you consent to these practices.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">🔍 Information We Collect</h2>
+                    <div class="accordion-content">
+                        <p>We collect the following types of information:</p>
+                        <ul>
+                            <li><strong>Personal Data</strong>: Email address, name, and profile photo (if provided) during registration/login via Firebase Authentication.</li>
+                            <li><strong>Usage Data</strong>: Grades, subjects, and session data stored locally in your browser (localStorage). This is not sent to our servers unless you explicitly save sessions.</li>
+                            <li><strong>Contact Data</strong>: Name, email, subject, and message when using the contact form.</li>
+                        </ul>
+                        <p>We do <em>not</em> collect sensitive data like financial info or health records.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">📤 How We Use Your Information</h2>
+                    <div class="accordion-content">
+                        <ul>
+                            <li>Provide and improve App features (e.g., save sessions, calculate grades).</li>
+                            <li>Send auto-replies and respond to contact form inquiries via EmailJS.</li>
+                            <li>Analyze usage to enhance the App.</li>
+                        </ul>
+                        <p>We do not sell your data to third parties.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">🔒 Data Security & Storage</h2>
+                    <div class="accordion-content">
+                        <p>Your data is secured with:</p>
+                        <ul>
+                            <li>Firebase Authentication (encrypted, compliant with GDPR/CCPA).</li>
+                            <li>Local browser storage for grades/sessions (deleted on logout/clear).</li>
+                            <li>EmailJS for contact forms (data transmitted securely, not stored long-term).</li>
+                        </ul>
+                        <p>We retain data only as long as needed for App functionality. You can delete your account via Firebase console or contact us.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">🌐 Third-Party Services</h2>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>Firebase</strong>: For authentication and user management (see <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>).</li>
+                            <li><strong>EmailJS</strong>: For contact form submissions (see <a href="https://www.emailjs.com/legal/privacy-policy/" target="_blank" rel="noopener">EmailJS Privacy Policy</a>).</li>
+                            <li><strong>jsPDF</strong>: Local PDF generation (no data sent externally; open-source library).</li>
+                        </ul>
+                        <p>We only share data with these services as necessary for functionality. No ads or tracking pixels.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">⚖️ Your Rights & Choices</h2>
+                    <div class="accordion-content">
+                        <p>You have rights to:</p>
+                        <ul>
+                            <li>Access, update, or delete your data (via Profile or contact us).</li>
+                            <li>Opt-out of communications (reply "unsubscribe" to emails).</li>
+                            <li>Withdraw consent (logout/delete account).</li>
+                        </ul>
+                        <p>For EU users: GDPR compliant. For CA users: CCPA compliant. Contact us for requests.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">🔄 Changes to This Policy</h2>
+                    <div class="accordion-content">
+                        <p>We may update this policy. Changes will be posted here with the new effective date. Continued use after changes implies acceptance.</p>
+                        <p>Questions? Email <a href="mailto:mr.suah19@gmail.com">mr.suah19@gmail.com</a>.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="showSection('grades')" class="back-btn">← Back to Grades</button>
+        </section>
+
+        <!-- Terms of Service Section (hidden by default) -->
+        <section id="terms-section" class="help-section" style="display: none;">
+            <h1>Terms of Service</h1>
+            
+            <div class="help-content">
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">📜 Introduction</h2>
+                    <div class="accordion-content active">
+                        <p>Effective Date: October 13, 2025</p>
+                        <p>Welcome to Grade Calculator ("we," "our," or "us"). These Terms of Service ("Terms") govern your use of our web application (the "App"). By accessing or using the App, you agree to be bound by these Terms. If you do not agree, please do not use the App.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">👤 User Responsibilities</h2>
+                    <div class="accordion-content">
+                        <p>You agree to:</p>
+                        <ul>
+                            <li>Use the App only for lawful purposes and in compliance with all applicable laws.</li>
+                            <li>Provide accurate information during registration and use.</li>
+                            <li>Not misuse the App, including but not limited to: introducing malware, unauthorized access, or spamming.</li>
+                            <li>Respect intellectual property rights and not copy or distribute App content without permission.</li>
+                        </ul>
+                        <p>We reserve the right to suspend or terminate accounts for violations.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">💡 Intellectual Property</h2>
+                    <div class="accordion-content">
+                        <p>The App and its content (including design, code, and features) are owned by us or our licensors. You are granted a limited, non-exclusive, non-transferable license to use the App for personal, non-commercial purposes. You may not modify, reproduce, or distribute any part of the App without written consent.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">🚫 Disclaimers & Limitations</h2>
+                    <div class="accordion-content">
+                        <p>The App is provided "as is" without warranties of any kind. We do not guarantee accuracy of calculations or uninterrupted service. You use the App at your own risk. In no event shall we be liable for indirect, incidental, or consequential damages arising from your use of the App.</p>
+                        <p>Liability is limited to the maximum extent permitted by law.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">🔚 Termination</h2>
+                    <div class="accordion-content">
+                        <p>We may terminate or suspend your access to the App at any time, with or without notice, for any reason, including violations of these Terms. Upon termination, your right to use the App ceases immediately.</p>
+                        <p>You may stop using the App at any time by deleting your account or ceasing access.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">⚖️ Governing Law</h2>
+                    <div class="accordion-content">
+                        <p>These Terms are governed by the laws of Liberia, without regard to conflict of law principles. Any disputes shall be resolved exclusively in the courts of Monrovia, Liberia.</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h2 onclick="toggleAccordion(this)">🔄 Changes to These Terms</h2>
+                    <div class="accordion-content">
+                        <p>We may update these Terms from time to time. Changes will be posted here with the new effective date. Continued use of the App after changes constitutes acceptance.</p>
+                        <p>Questions? Email <a href="mailto:mr.suah19@gmail.com">mr.suah19@gmail.com</a>.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="showSection('grades')" class="back-btn">← Back to Grades</button>
+        </section>
+        </div>
+    </div> <!-- End of #main-app wrapper -->
+
+    <footer>
+        <div class="footer-container">
+            <p>&copy; <span id="copyrightYear">2025</span> Grade Calculator. All rights reserved. Last updated October 2025.</p>
+            <p>Developed with ❤️ for students everywhere.</p>
+            <div class="footer-links">
+                <a href="#" onclick="showSection('privacy')">Privacy Policy</a>
+                <a href="#" onclick="showSection('terms')">Terms of Service</a>
+                <a href="#" onclick="showSection('contact')">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+<!-- Link to external JavaScript file -->
+<script src="script.js" defer></script>
+</body>
+</html>
